@@ -7,6 +7,7 @@ import Tools from "./pages/Tools";
 import Account from "./pages/Account";
 import "./App.css";
 import Resizer from "./pages/Resizer";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/account" element={<Account />} />
         </Routes>
       </div>
+      <Footer />
     </div>
   );
 }
