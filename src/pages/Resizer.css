@@ -1,0 +1,300 @@
+.resizer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.resizer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.upload-section {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-area:hover {
+  border-color: #999;
+  background: #f0f0f0;
+}
+
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  display: block;
+  margin: 0 auto;
+}
+
+.crop-overlay {
+  position: absolute;
+  border: 2px dashed rgba(255, 255, 255, 0.8);
+  background-color: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.original-info {
+  margin-top: 20px;
+}
+
+.crop-controls {
+  margin-top: 20px;
+}
+
+.crop-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.crop-inputs div {
+  display: flex;
+  align-items: center;
+}
+
+.crop-inputs label {
+  margin-right: 5px;
+  width: 50px;
+}
+
+.crop-inputs input {
+  width: 60px;
+  padding: 5px;
+}
+
+.controls-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.unit-selector {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.unit-selector label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dimension-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+}
+
+.input-group label {
+  width: 60px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 8px;
+  margin: 0 5px;
+}
+
+.aspect-ratio-controls {
+  margin-bottom: 15px;
+}
+
+.aspect-ratio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.target-size {
+  margin-bottom: 15px;
+}
+
+.target-size-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.target-size-input input {
+  width: 100px;
+  padding: 8px;
+}
+
+.output-format {
+  margin-bottom: 15px;
+}
+
+.output-format select {
+  padding: 8px;
+  width: 100%;
+}
+
+.quality-control {
+  margin-bottom: 20px;
+}
+
+.quality-control input {
+  width: 100%;
+}
+
+.action-buttons {
+  margin-bottom: 20px;
+}
+
+.resize-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+  transition: background-color 0.3s;
+}
+
+.resize-btn:hover {
+  background-color: #45a049;
+}
+
+.resize-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.result-section {
+  margin-top: 20px;
+}
+
+.result-preview {
+  text-align: center;
+}
+
+.result-image {
+  max-width: 100%;
+  max-height: 300px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.clickable-image {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clickable-image:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result-info {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+.download-btn {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+
+.download-btn:hover {
+  background-color: #0b7dda;
+}
+.download-options {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.download-options button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #2196f3;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.download-options button:hover {
+  background: #0b7dda;
+}
+
+.download-options button:last-child {
+  background: #f44336;
+}
+
+.download-options button:last-child:hover {
+  background: #d32f2f;
+}
+
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+@media (max-width: 768px) {
+  .resizer-grid {
+    grid-template-columns: 1fr;
+  }
+}

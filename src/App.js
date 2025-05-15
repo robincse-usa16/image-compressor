@@ -1,23 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import Home from "./pages/Home";
+import Compressor from "./pages/Compressor";
+import Converter from "./pages/Converter";
+import Tools from "./pages/Tools";
+import Account from "./pages/Account";
+import "./App.css";
+import Resizer from "./pages/Resizer";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app">
+      <Navbar />
+      <div className="main-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/compressor" element={<Compressor />} />
+          <Route path="/converter" element={<Converter />} />
+          <Route path="/resizer" element={<Resizer />} />
+          <Route path="/tools" element={<Tools />} />
+          <Route path="/account" element={<Account />} />
+        </Routes>
+      </div>
     </div>
   );
 }
