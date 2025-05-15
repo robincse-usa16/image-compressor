@@ -1,9 +1,10 @@
 import React from "react";
+import "./Footer.css";
 
 function Footer() {
   return (
-    <div>
-      <h1>Best to me</h1>
+    <div className="footer">
+      <p>Made with ❤️ Robin | Works on all Kings world</p>
     </div>
   );
 }
