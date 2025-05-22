@@ -462,6 +462,88 @@
   background-color: #45a049;
 }
 
+/* Circle Loader Styles */
+.circle-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.circle-loader-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 300px;
+  text-align: center;
+}
+
+.circle-loader {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin-bottom: 20px;
+}
+
+.circle-loader-track {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 8px solid #f0f0f0;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.circle-loader-spinner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 8px solid transparent;
+  border-top-color: #4caf50;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.circle-loader-text {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.circle-loader-details {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.circle-loader-details span {
+  margin: 2px 0;
+}
+
+/* Disable interactions during processing */
+.image-resizer-container.processing * {
+  pointer-events: none;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .features {
