@@ -1,603 +1,562 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "./Resizer.css";
 
 const Resizer = () => {
-  // State management
-  const [image, setImage] = useState(null);
-  const [originalSize, setOriginalSize] = useState({ width: 0, height: 0 });
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [crop, setCrop] = useState({ x: 0, y: 0, width: 100, height: 100 });
-  const [keepAspect, setKeepAspect] = useState(true);
-  const [aspectRatio, setAspectRatio] = useState("free");
-  const [unit, setUnit] = useState("px");
-  const [targetSize, setTargetSize] = useState(500);
-  const [targetUnit, setTargetUnit] = useState("KB");
-  const [outputFormat, setOutputFormat] = useState("jpeg");
-  const [quality, setQuality] = useState(90);
-  const [result, setResult] = useState(null);
-  const [isResizing, setIsResizing] = useState(false);
-  const [showDownloadOptions, setShowDownloadOptions] = useState(false);
+  const [originalImage, setOriginalImage] = useState(null);
+  const [resizedImage, setResizedImage] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const [fileSize, setFileSize] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadSpeed, setUploadSpeed] = useState("0 B/s");
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const [originalWidth, setOriginalWidth] = useState(0);
+  const [originalHeight, setOriginalHeight] = useState(0);
+  const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
+  const [resizeMethod, setResizeMethod] = useState("percentage");
+  const [percentage, setPercentage] = useState(100);
+  const [targetFileSize, setTargetFileSize] = useState("");
+  const [exportFormat, setExportFormat] = useState("original");
+  const [isDragging, setIsDragging] = useState(false);
+  const [showCrop, setShowCrop] = useState(false);
+  const [cropWidth, setCropWidth] = useState(0);
+  const [cropHeight, setCropHeight] = useState(0);
+  const [cropX, setCropX] = useState(0);
+  const [cropY, setCropY] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState("freeform");
 
   const fileInputRef = useRef(null);
   const canvasRef = useRef(null);
-  const imageRef = useRef(null);
-  const cropRef = useRef(null);
+  const dropAreaRef = useRef(null);
 
-  // Finalize the resize operation
-  const finalizeResize = useCallback(
-    (blob, width, height) => {
-      // Revoke previous URL if exists
-      if (result?.url) {
-        URL.revokeObjectURL(result.url);
-      }
-
-      const url = URL.createObjectURL(blob);
-      setResult({
-        blob,
-        width,
-        height,
-        size: blob.size,
-        url,
-      });
-      setIsResizing(false);
-    },
-    [result?.url]
-  );
-
-  // Adjust quality to meet target file size
-  const adjustQualityForTargetSize = useCallback(
-    (canvas, initialBlob) => {
-      const targetBytes =
-        targetUnit === "KB" ? targetSize * 1024 : targetSize * 1024 * 1024;
-      let minQuality = 10;
-      let maxQuality = quality;
-      let bestBlob = initialBlob;
-      let iterations = 0;
-      const maxIterations = 10;
-
-      const binarySearch = (callback) => {
-        iterations++;
-        const midQuality = Math.round((minQuality + maxQuality) / 2);
-
-        canvas.toBlob(
-          (blob) => {
-            if (!blob || iterations >= maxIterations) {
-              callback(bestBlob);
-              return;
-            }
-
-            const sizeDiff = blob.size - targetBytes;
-
-            if (Math.abs(sizeDiff) < targetBytes * 0.05) {
-              callback(blob);
-            } else if (blob.size > targetBytes) {
-              maxQuality = midQuality - 1;
-              binarySearch(callback);
-            } else {
-              bestBlob = blob;
-              minQuality = midQuality + 1;
-              binarySearch(callback);
-            }
-          },
-          `image/${outputFormat}`,
-          midQuality / 100
-        );
-      };
-
-      binarySearch((finalBlob) => {
-        finalizeResize(finalBlob, canvas.width, canvas.height);
-      });
-    },
-    [finalizeResize, outputFormat, quality, targetSize, targetUnit]
-  );
-
-  // Resize and process the image
-  const resizeImage = useCallback(() => {
-    if (!image || !canvasRef.current) return;
-
-    setIsResizing(true);
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    // Calculate final dimensions
-    let finalWidth = dimensions.width;
-    let finalHeight = dimensions.height;
-
-    if (unit === "%") {
-      finalWidth = Math.round((dimensions.width * originalSize.width) / 100);
-      finalHeight = Math.round((dimensions.height * originalSize.height) / 100);
-    }
-
-    // Calculate crop area in pixels
-    const cropX = (crop.x / 100) * image.width;
-    const cropY = (crop.y / 100) * image.height;
-    const cropWidth = (crop.width / 100) * image.width;
-    const cropHeight = (crop.height / 100) * image.height;
-
-    canvas.width = finalWidth;
-    canvas.height = finalHeight;
-    ctx.imageSmoothingQuality = "high";
-
-    // Draw the cropped and resized image
-    ctx.drawImage(
-      image,
-      cropX,
-      cropY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      finalWidth,
-      finalHeight
-    );
-
-    // Convert to blob
-    canvas.toBlob(
-      (blob) => {
-        if (targetSize > 0) {
-          adjustQualityForTargetSize(canvas, blob);
-        } else {
-          finalizeResize(blob, finalWidth, finalHeight);
-        }
-      },
-      `image/${outputFormat}`,
-      quality / 100
-    );
-  }, [
-    image,
-    dimensions,
-    crop,
-    unit,
-    originalSize,
-    outputFormat,
-    quality,
-    targetSize,
-    adjustQualityForTargetSize,
-    finalizeResize,
-  ]);
-
-  // Handle image upload
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  // Handle file upload
+  const handleFileUpload = (file) => {
     if (!file) return;
+
+    setFileName(file.name);
+    setFileSize(file.size / 1024); // KB
+
+    // Simulate upload progress
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 10;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+      }
+      setUploadProgress(progress);
+      setUploadSpeed(`${Math.floor(Math.random() * 200) + 50} KB/s`);
+    }, 200);
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        setImage(img);
-        setOriginalSize({ width: img.width, height: img.height });
-        setDimensions({
-          width: img.width,
-          height: img.height,
-        });
-        setCrop({
-          x: 0,
-          y: 0,
-          width: 100,
-          height: 100,
-        });
+        setOriginalWidth(img.width);
+        setOriginalHeight(img.height);
+        setWidth(img.width);
+        setHeight(img.height);
+        setCropWidth(img.width);
+        setCropHeight(img.height);
+        setOriginalImage(event.target.result);
       };
       img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
 
+  // Handle drag and drop
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      handleFileUpload(files[0]);
+    }
+  };
+
+  // Resize image
+  const resizeImage = () => {
+    if (!originalImage) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+
+      // Set canvas dimensions
+      canvas.width = width;
+      canvas.height = height;
+
+      // Draw resized image
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Get resized image data
+      let format = "image/jpeg";
+      if (exportFormat === "png") format = "image/png";
+      else if (exportFormat === "webp") format = "image/webp";
+
+      const resizedDataUrl = canvas.toDataURL(format, qualityFromFileSize());
+      setResizedImage(resizedDataUrl);
+    };
+
+    img.src = originalImage;
+  };
+
+  // Calculate quality based on target file size (simplified)
+  const qualityFromFileSize = () => {
+    if (!targetFileSize) return 0.9;
+    const targetKB = parseInt(targetFileSize);
+    const estimatedQuality = Math.min(0.9, targetKB / (fileSize * 0.8));
+    return Math.max(0.1, estimatedQuality);
+  };
+
   // Handle dimension changes
-  const handleDimensionChange = (dimension, value) => {
-    if (!image) return;
+  const handleWidthChange = (e) => {
+    const newWidth = parseInt(e.target.value);
+    setWidth(newWidth);
 
-    let newWidth = dimensions.width;
-    let newHeight = dimensions.height;
-
-    if (dimension === "width") {
-      newWidth = parseInt(value) || 1;
-      if (keepAspect && aspectRatio !== "free") {
-        const ratio =
-          aspectRatio === "16:9"
-            ? 16 / 9
-            : aspectRatio === "4:3"
-            ? 4 / 3
-            : aspectRatio === "1:1"
-            ? 1
-            : 9 / 16;
-        newHeight = Math.round(newWidth / ratio);
-      }
-    } else {
-      newHeight = parseInt(value) || 1;
-      if (keepAspect && aspectRatio !== "free") {
-        const ratio =
-          aspectRatio === "16:9"
-            ? 16 / 9
-            : aspectRatio === "4:3"
-            ? 4 / 3
-            : aspectRatio === "1:1"
-            ? 1
-            : 9 / 16;
-        newWidth = Math.round(newHeight * ratio);
-      }
+    if (maintainAspectRatio && originalWidth) {
+      const ratio = originalWidth / originalHeight;
+      setHeight(Math.round(newWidth / ratio));
     }
-
-    setDimensions({ width: newWidth, height: newHeight });
   };
 
-  // Handle crop area changes
-  const handleCropChange = (e) => {
-    const { name, value } = e.target;
-    setCrop((prev) => ({
-      ...prev,
-      [name]: parseInt(value) || 0,
-    }));
+  const handleHeightChange = (e) => {
+    const newHeight = parseInt(e.target.value);
+    setHeight(newHeight);
+
+    if (maintainAspectRatio && originalHeight) {
+      const ratio = originalWidth / originalHeight;
+      setWidth(Math.round(newHeight * ratio));
+    }
   };
 
-  // Download the resized image
-  const downloadImage = useCallback(
-    (filename = null) => {
-      if (!result) return;
+  // Handle percentage change
+  const handlePercentageChange = (e) => {
+    const newPercentage = parseInt(e.target.value);
+    setPercentage(newPercentage);
 
-      const date = new Date();
-      const timestamp = `${date.getFullYear()}${(date.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}${date.getDate().toString().padStart(2, "0")}_${date
-        .getHours()
-        .toString()
-        .padStart(2, "0")}${date.getMinutes().toString().padStart(2, "0")}`;
-
-      const link = document.createElement("a");
-      link.href = result.url;
-      link.download =
-        filename ||
-        `resized_${timestamp}_${result.width}x${result.height}.${
-          outputFormat === "jpeg" ? "jpg" : outputFormat
-        }`;
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setShowDownloadOptions(false);
-    },
-    [result, outputFormat]
-  );
-
-  // Handle image click to show download options
-  const handleImageClick = () => {
-    setShowDownloadOptions(true);
+    if (originalWidth && originalHeight) {
+      setWidth(Math.round((originalWidth * newPercentage) / 100));
+      setHeight(Math.round((originalHeight * newPercentage) / 100));
+    }
   };
 
-  // Close download options when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (
-        showDownloadOptions &&
-        !e.target.closest(".download-options") &&
-        !e.target.closest(".result-image")
-      ) {
-        setShowDownloadOptions(false);
-      }
+  // Handle crop
+  const applyCrop = () => {
+    if (!originalImage) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+
+      // Set canvas dimensions
+      canvas.width = cropWidth;
+      canvas.height = cropHeight;
+
+      // Draw cropped image
+      ctx.drawImage(
+        img,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
+        0,
+        0,
+        cropWidth,
+        cropHeight
+      );
+
+      const croppedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+      setOriginalImage(croppedDataUrl);
+      setOriginalWidth(cropWidth);
+      setOriginalHeight(cropHeight);
+      setWidth(cropWidth);
+      setHeight(cropHeight);
+      setShowCrop(false);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showDownloadOptions]);
+    img.src = originalImage;
+  };
 
-  // Update preview when values change
-  useEffect(() => {
-    if (image) {
-      resizeImage();
-    }
-  }, [image, resizeImage, dimensions, crop, quality, outputFormat]);
+  // Download resized image
+  const handleDownload = () => {
+    if (!resizedImage) return;
 
-  // Clean up object URLs when component unmounts
-  useEffect(() => {
-    return () => {
-      if (result?.url) {
-        URL.revokeObjectURL(result.url);
-      }
-    };
-  }, [result]);
+    let extension = "jpg";
+    if (exportFormat === "png") extension = "png";
+    else if (exportFormat === "webp") extension = "webp";
+
+    const link = document.createElement("a");
+    link.href = resizedImage;
+    link.download = `resized-${fileName.split(".")[0]}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Trigger file input
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
+  // Reset crop
+  const resetCrop = () => {
+    setCropWidth(originalWidth);
+    setCropHeight(originalHeight);
+    setCropX(0);
+    setCropY(0);
+  };
 
   return (
-    <div className="resizer-container">
-      <h1>📏 Advanced Image Resizer</h1>
-      <p className="subtitle">
-        Resize, crop and optimize your images with precision
-      </p>
+    <div className="image-resizer-container">
+      <header>
+        <h1>🖼️ Image Resizer</h1>
+        <p className="subtitle">Easily resize images online for free. ✨</p>
+      </header>
+      <div
+        className={`upload-area ${isDragging ? "dragging" : ""}`}
+        ref={dropAreaRef}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <div className="upload-content">
+          <h3>Select Images</h3>
+          <p>or, drag and drop images here</p>
+          <button className="upload-button" onClick={triggerFileInput}>
+            Select Files
+          </button>
+          <p className="file-size-info">
+            Max file size: 10 MB. Sign up for more.
+          </p>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => handleFileUpload(e.target.files[0])}
+            accept="image/*"
+            style={{ display: "none" }}
+          />
+        </div>
+      </div>
 
-      <div className="resizer-grid">
-        {/* Upload Section */}
-        <div className="upload-section">
-          <div
-            className="upload-area"
-            onClick={() => fileInputRef.current.click()}
-          >
-            {image ? (
-              <div className="image-container">
-                <img
-                  ref={imageRef}
-                  src={image.src}
-                  alt="Original"
-                  className="preview-image"
-                />
-                <div
-                  ref={cropRef}
-                  className="crop-overlay"
-                  style={{
-                    left: `${crop.x}%`,
-                    top: `${crop.y}%`,
-                    width: `${crop.width}%`,
-                    height: `${crop.height}%`,
-                  }}
-                ></div>
-              </div>
+      {originalImage && (
+        <div className="file-info">
+          <h4>Your Image</h4>
+          <div className="file-details">
+            <span>{fileName}</span>
+            <span>{fileSize.toFixed(2)} KB</span>
+            {uploadProgress < 100 ? (
+              <span>
+                Uploading {uploadProgress.toFixed(0)}% ({uploadSpeed})
+              </span>
             ) : (
-              <>
-                <div className="upload-icon">📤</div>
-                <p>Click to upload an image</p>
-              </>
+              <span>Uploaded 100%</span>
             )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              onChange={handleImageUpload}
-              style={{ display: "none" }}
-            />
+          </div>
+        </div>
+      )}
+
+      {originalImage && (
+        <div className="resize-settings">
+          <h3>Resize Settings</h3>
+
+          <div className="resize-methods">
+            <button
+              className={resizeMethod === "percentage" ? "active" : ""}
+              onClick={() => setResizeMethod("percentage")}
+            >
+              As Percentage
+            </button>
+            <button
+              className={resizeMethod === "dimensions" ? "active" : ""}
+              onClick={() => setResizeMethod("dimensions")}
+            >
+              By Dimensions
+            </button>
+            <button
+              className={resizeMethod === "social" ? "active" : ""}
+              onClick={() => setResizeMethod("social")}
+            >
+              Social Media
+            </button>
           </div>
 
-          {image && (
-            <div className="original-info">
-              <h3>Original Image</h3>
-              <p>
-                Dimensions: {originalSize.width} × {originalSize.height} px
-              </p>
-              <p>Size: {((image.src.length * 0.75) / 1024).toFixed(2)} KB</p>
-
-              <div className="crop-controls">
-                <h4>Crop Area (%)</h4>
-                <div className="crop-inputs">
-                  <div>
-                    <label>X:</label>
-                    <input
-                      type="number"
-                      name="x"
-                      min="0"
-                      max="100"
-                      value={crop.x}
-                      onChange={handleCropChange}
-                    />
-                  </div>
-                  <div>
-                    <label>Y:</label>
-                    <input
-                      type="number"
-                      name="y"
-                      min="0"
-                      max="100"
-                      value={crop.y}
-                      onChange={handleCropChange}
-                    />
-                  </div>
-                  <div>
-                    <label>Width:</label>
-                    <input
-                      type="number"
-                      name="width"
-                      min="1"
-                      max="100"
-                      value={crop.width}
-                      onChange={handleCropChange}
-                    />
-                  </div>
-                  <div>
-                    <label>Height:</label>
-                    <input
-                      type="number"
-                      name="height"
-                      min="1"
-                      max="100"
-                      value={crop.height}
-                      onChange={handleCropChange}
-                    />
-                  </div>
-                </div>
+          {resizeMethod === "percentage" && (
+            <div className="percentage-control">
+              <label>
+                Percentage:
+                <input
+                  type="range"
+                  min="1"
+                  max="200"
+                  value={percentage}
+                  onChange={handlePercentageChange}
+                />
+                <span>{percentage}%</span>
+              </label>
+              <div className="dimension-preview">
+                Original: {originalWidth} × {originalHeight} → Resized: {width}{" "}
+                × {height}
               </div>
             </div>
           )}
+
+          {resizeMethod === "dimensions" && (
+            <div className="dimension-controls">
+              <div className="dimension-input">
+                <label>
+                  Width:
+                  <input
+                    type="number"
+                    value={width}
+                    onChange={handleWidthChange}
+                    min="1"
+                  />
+                  <span>px</span>
+                </label>
+              </div>
+              <div className="dimension-input">
+                <label>
+                  Height:
+                  <input
+                    type="number"
+                    value={height}
+                    onChange={handleHeightChange}
+                    min="1"
+                  />
+                  <span>px</span>
+                </label>
+              </div>
+              <div className="aspect-ratio-control">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={maintainAspectRatio}
+                    onChange={(e) => setMaintainAspectRatio(e.target.checked)}
+                  />
+                  Lock Aspect Ratio
+                </label>
+              </div>
+            </div>
+          )}
+
+          {resizeMethod === "social" && (
+            <div className="social-presets">
+              <button
+                onClick={() => {
+                  setWidth(1080);
+                  setHeight(1080);
+                }}
+              >
+                Instagram Square (1080×1080)
+              </button>
+              <button
+                onClick={() => {
+                  setWidth(1080);
+                  setHeight(1350);
+                }}
+              >
+                Instagram Portrait (1080×1350)
+              </button>
+              <button
+                onClick={() => {
+                  setWidth(1080);
+                  setHeight(566);
+                }}
+              >
+                Facebook Post (1080×566)
+              </button>
+              <button
+                onClick={() => {
+                  setWidth(1200);
+                  setHeight(630);
+                }}
+              >
+                Twitter Post (1200×630)
+              </button>
+            </div>
+          )}
+
+          <div className="export-settings">
+            <h4>Export Settings</h4>
+
+            <div className="target-size">
+              <label>
+                Target File Size (optional):
+                <input
+                  type="number"
+                  value={targetFileSize}
+                  onChange={(e) => setTargetFileSize(e.target.value)}
+                  placeholder="KB"
+                />
+              </label>
+              <p className="hint">
+                Set a max output file size. Only works for JPG files
+              </p>
+            </div>
+
+            <div className="format-selection">
+              <label>
+                Save Image As:
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                >
+                  <option value="original">Original Format</option>
+                  <option value="jpg">JPG</option>
+                  <option value="png">PNG</option>
+                  <option value="webp">WebP</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div className="action-buttons">
+            <button className="crop-button" onClick={() => setShowCrop(true)}>
+              Crop Image
+            </button>
+            <button className="resize-button" onClick={resizeImage}>
+              Resize Image
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* Controls Section */}
-        <div className="controls-section">
-          <div className="dimension-controls">
-            <h3>Resize Settings</h3>
+      {showCrop && (
+        <div className="crop-modal">
+          <div className="crop-content">
+            <h3>Crop Image</h3>
 
-            <div className="unit-selector">
-              <label>
-                <input
-                  type="radio"
-                  name="unit"
-                  checked={unit === "px"}
-                  onChange={() => setUnit("px")}
-                />
-                Pixels (px)
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="unit"
-                  checked={unit === "%"}
-                  onChange={() => setUnit("%")}
-                />
-                Percentage (%)
-              </label>
-            </div>
-
-            <div className="dimension-inputs">
-              <div className="input-group">
-                <label>Width:</label>
-                <input
-                  type="number"
-                  value={dimensions.width}
-                  onChange={(e) =>
-                    handleDimensionChange("width", e.target.value)
-                  }
-                  min="1"
-                />
-                <span>{unit}</span>
+            <div className="crop-presets">
+              <h4>Crop Rectangle</h4>
+              <div className="crop-dimensions">
+                <label>
+                  Width:
+                  <input
+                    type="number"
+                    value={cropWidth}
+                    onChange={(e) => setCropWidth(parseInt(e.target.value))}
+                    min="1"
+                    max={originalWidth}
+                  />
+                </label>
+                <label>
+                  Height:
+                  <input
+                    type="number"
+                    value={cropHeight}
+                    onChange={(e) => setCropHeight(parseInt(e.target.value))}
+                    min="1"
+                    max={originalHeight}
+                  />
+                </label>
               </div>
 
-              <div className="input-group">
-                <label>Height:</label>
-                <input
-                  type="number"
-                  value={dimensions.height}
-                  onChange={(e) =>
-                    handleDimensionChange("height", e.target.value)
-                  }
-                  min="1"
-                />
-                <span>{unit}</span>
-              </div>
-            </div>
-
-            <div className="aspect-ratio-controls">
-              <label className="aspect-ratio-toggle">
-                <input
-                  type="checkbox"
-                  checked={keepAspect}
-                  onChange={() => setKeepAspect(!keepAspect)}
-                />
-                Maintain Aspect Ratio
-              </label>
-
-              {keepAspect && (
+              <div className="aspect-ratio-control">
+                <h4>Aspect Ratio</h4>
                 <select
                   value={aspectRatio}
                   onChange={(e) => setAspectRatio(e.target.value)}
                 >
-                  <option value="free">Custom</option>
-                  <option value="1:1">Square (1:1)</option>
-                  <option value="4:3">Standard (4:3)</option>
-                  <option value="16:9">Widescreen (16:9)</option>
-                  <option value="9:16">Portrait (9:16)</option>
-                </select>
-              )}
-            </div>
-
-            <div className="target-size">
-              <h4>Target File Size</h4>
-              <div className="target-size-input">
-                <input
-                  type="number"
-                  value={targetSize}
-                  onChange={(e) => setTargetSize(e.target.value)}
-                  min="0"
-                />
-                <select
-                  value={targetUnit}
-                  onChange={(e) => setTargetUnit(e.target.value)}
-                >
-                  <option value="KB">KB</option>
-                  <option value="MB">MB</option>
+                  <option value="freeform">FreeForm</option>
+                  <option value="1:1">1:1 (Square)</option>
+                  <option value="4:3">4:3</option>
+                  <option value="16:9">16:9 (Widescreen)</option>
+                  <option value="9:16">9:16 (Portrait)</option>
                 </select>
               </div>
             </div>
 
-            <div className="output-format">
-              <h4>Output Format</h4>
-              <select
-                value={outputFormat}
-                onChange={(e) => setOutputFormat(e.target.value)}
-              >
-                <option value="jpeg">JPEG</option>
-                <option value="png">PNG</option>
-                <option value="webp">WebP</option>
-              </select>
+            <div className="crop-position">
+              <h4>Crop Position</h4>
+              <div className="position-controls">
+                <label>
+                  Position (X):
+                  <input
+                    type="number"
+                    value={cropX}
+                    onChange={(e) => setCropX(parseInt(e.target.value))}
+                    min="0"
+                    max={originalWidth - cropWidth}
+                  />
+                </label>
+                <label>
+                  Position (Y):
+                  <input
+                    type="number"
+                    value={cropY}
+                    onChange={(e) => setCropY(parseInt(e.target.value))}
+                    min="0"
+                    max={originalHeight - cropHeight}
+                  />
+                </label>
+              </div>
             </div>
 
-            <div className="quality-control">
-              <label>Quality: {quality}%</label>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={quality}
-                onChange={(e) => setQuality(e.target.value)}
-              />
-            </div>
-
-            <div className="action-buttons">
+            <div className="crop-actions">
               <button
-                onClick={resizeImage}
-                className="resize-btn"
-                disabled={!image || isResizing}
+                className="cancel-button"
+                onClick={() => setShowCrop(false)}
               >
-                {isResizing ? "Processing..." : "Resize Image"}
+                Cancel
+              </button>
+              <button className="reset-button" onClick={resetCrop}>
+                Reset
+              </button>
+              <button className="apply-button" onClick={applyCrop}>
+                Apply Crop
               </button>
             </div>
           </div>
-
-          {/* Results Section */}
-          {result && (
-            <div className="result-section">
-              <h3>Resized Image Preview</h3>
-              <div className="result-preview">
-                <canvas
-                  ref={canvasRef}
-                  style={{ position: "absolute", left: "-9999px" }}
-                />
-                <div className="image-container" onClick={handleImageClick}>
-                  <img
-                    src={result.url}
-                    alt="Resized"
-                    className="result-image clickable-image"
-                  />
-                  {showDownloadOptions && (
-                    <div className="download-options">
-                      <h4>Download Options</h4>
-                      <button onClick={() => downloadImage()}>
-                        Download with Default Name
-                      </button>
-                      <button
-                        onClick={() =>
-                          downloadImage(
-                            `custom_name.${
-                              outputFormat === "jpeg" ? "jpg" : outputFormat
-                            }`
-                          )
-                        }
-                      >
-                        Download with Custom Name
-                      </button>
-                      <button onClick={() => setShowDownloadOptions(false)}>
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div className="result-info">
-                  <p>
-                    Dimensions: {result.width} × {result.height} px
-                  </p>
-                  <p>
-                    Size:{" "}
-                    {targetUnit === "KB"
-                      ? `${(result.size / 1024).toFixed(2)} KB`
-                      : `${(result.size / (1024 * 1024)).toFixed(2)} MB`}
-                  </p>
-                  <p>Format: {outputFormat.toUpperCase()}</p>
-                  <button
-                    onClick={() => downloadImage()}
-                    className="download-btn"
-                  >
-                    Download Image
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      )}
+
+      {resizedImage && (
+        <div className="result-preview">
+          <h3>Resized Image Preview</h3>
+          <div className="image-comparison">
+            <div className="original">
+              <h4>
+                Original: {originalWidth} × {originalHeight}
+              </h4>
+              <img src={originalImage} alt="Original" />
+            </div>
+            <div className="resized">
+              <h4>
+                Resized: {width} × {height}
+              </h4>
+              <img src={resizedImage} alt="Resized" />
+            </div>
+          </div>
+          <button className="download-button" onClick={handleDownload}>
+            Download Resized Image
+          </button>
+        </div>
+      )}
+
+      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 };
