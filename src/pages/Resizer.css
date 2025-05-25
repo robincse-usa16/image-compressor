@@ -4,27 +4,51 @@
   margin: 0 auto;
   padding: 20px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+}
+
+.image-resizer-container.loading {
+  opacity: 0.7;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+header h1 {
+  font-size: 2.2rem;
   color: #333;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #666;
 }
 
 /* Upload Area */
 .upload-area {
-  border: 2px dashed #ccc;
-  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
   padding: 40px;
   text-align: center;
+  transition: all 0.3s ease;
+  background-color: #f9fafb;
   margin-bottom: 20px;
-  transition: all 0.3s;
 }
 
 .upload-area.dragging {
-  border-color: #4a6fa5;
-  background-color: #f0fff0;
+  border-color: #4caf50;
+  background-color: #f0fdf4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .upload-content h3 {
   margin-bottom: 10px;
   color: #444;
+  font-size: 1.3rem;
 }
 
 .upload-content p {
@@ -33,22 +57,29 @@
 }
 
 .upload-button {
-  background-color: #4a6fa5;
+  background-color: #3a5a8c;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1rem;
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
 .upload-button:hover {
   background-color: #3a5a8c;
+  transform: translateY(-1px);
+}
+
+.upload-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .file-size-info {
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #888;
   margin-top: 15px;
 }
@@ -63,45 +94,14 @@
 
 .file-info h4 {
   margin-bottom: 10px;
+  font-size: 1.1rem;
 }
 
 .file-details {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-/* Features */
-.features {
-  display: flex;
-  justify-content: space-between;
-  margin: 30px 0;
-}
-
-.feature {
-  flex: 1;
-  padding: 0 15px;
-  text-align: center;
-}
-
-.feature h4 {
-  color: #4caf50;
-  margin-bottom: 10px;
-}
-
-.feature p {
-  color: #666;
-  font-size: 14px;
-}
-
-/* Description */
-.description {
-  background-color: #f9f9f9;
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 30px;
-  font-size: 15px;
-  line-height: 1.5;
+  font-size: 0.9rem;
+  color: #555;
 }
 
 /* Resize Settings */
@@ -132,6 +132,7 @@
   cursor: pointer;
   color: #666;
   position: relative;
+  font-size: 0.9rem;
 }
 
 .resize-methods button.active {
@@ -146,7 +147,12 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #4caf50;
+  background-color: #3a5a8c;
+}
+
+.resize-methods button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Percentage Control */
@@ -163,6 +169,7 @@
 .percentage-control input[type="range"] {
   flex: 1;
   margin: 0 10px;
+  height: 6px;
 }
 
 .percentage-control span {
@@ -171,7 +178,7 @@
 }
 
 .dimension-preview {
-  font-size: 14px;
+  font-size: 0.9rem;
   color: #666;
   margin-top: 5px;
 }
@@ -198,6 +205,8 @@
   width: 70px;
   margin: 0 5px;
   padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .aspect-ratio-control {
@@ -224,13 +233,18 @@
   border-radius: 4px;
   padding: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.8rem;
   text-align: left;
   transition: all 0.2s;
 }
 
 .social-presets button:hover {
   background-color: #e0e0e0;
+}
+
+.social-presets button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Export Settings */
@@ -258,10 +272,12 @@
   width: 80px;
   margin-left: 10px;
   padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .hint {
-  font-size: 12px;
+  font-size: 0.8rem;
   color: #888;
   margin-top: 5px;
 }
@@ -278,6 +294,8 @@
 .format-selection select {
   margin-left: 10px;
   padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 /* Action Buttons */
@@ -306,12 +324,18 @@
 }
 
 .resize-button {
-  background-color: #4caf50;
+  background-color: #4a6fa5;
   color: white;
 }
 
 .resize-button:hover {
-  background-color: #45a049;
+  background-color: #3a5a8c;
+}
+
+.crop-button:disabled,
+.resize-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Crop Modal */
@@ -325,7 +349,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1001;
 }
 
 .crop-content {
@@ -350,7 +374,7 @@
 .crop-presets h4,
 .crop-position h4 {
   margin-bottom: 10px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .crop-dimensions,
@@ -370,11 +394,8 @@
   width: 100%;
   padding: 5px;
   margin-top: 5px;
-}
-
-.aspect-ratio-control select {
-  width: 100%;
-  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
 }
 
 .crop-actions {
@@ -408,6 +429,13 @@
   color: white;
 }
 
+.cancel-button:disabled,
+.reset-button:disabled,
+.apply-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Result Preview */
 .result-preview {
   background-color: white;
@@ -434,7 +462,7 @@
 .original h4,
 .resized h4 {
   margin-bottom: 10px;
-  font-size: 15px;
+  font-size: 0.9rem;
 }
 
 .original img,
@@ -449,27 +477,32 @@
   display: block;
   width: 100%;
   padding: 12px;
-  background-color: #4caf50;
+  background-color: #4a6fa5;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s;
 }
 
 .download-button:hover {
-  background-color: #45a049;
+  background-color: #3a5a8c;
 }
 
-/* Circle Loader Styles */
-.circle-loader-overlay {
+.download-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Progress Loader Styles */
+.progress-loader-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.95);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -477,85 +510,72 @@
   backdrop-filter: blur(5px);
 }
 
-.circle-loader-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 300px;
+.progress-loader-container {
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
   text-align: center;
 }
 
-.circle-loader {
-  position: relative;
-  width: 120px;
-  height: 120px;
-  margin-bottom: 20px;
-}
-
-.circle-loader-track {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 8px solid #f0f0f0;
-  border-radius: 50%;
-  box-sizing: border-box;
-}
-
-.circle-loader-spinner {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 8px solid transparent;
-  border-top-color: #4caf50;
-  border-radius: 50%;
-  box-sizing: border-box;
-  animation: spin 1.5s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.circle-loader-text {
+.progress-loader-text {
   font-size: 1.2rem;
   font-weight: 500;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.circle-loader-details {
+.progress-loader-bar {
+  height: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.progress-loader-fill {
+  height: 100%;
+  background-color: #4caf50;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.progress-loader-details {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   font-size: 0.9rem;
   color: #666;
 }
 
-.circle-loader-details span {
-  margin: 2px 0;
-}
-
-/* Disable interactions during processing */
-.image-resizer-container.processing * {
-  pointer-events: none;
-}
-
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-  .features {
+  .upload-area {
+    padding: 30px 20px;
+  }
+
+  .resize-methods {
     flex-direction: column;
-    gap: 20px;
+  }
+
+  .resize-methods button {
+    margin-bottom: 5px;
+  }
+
+  .social-presets {
+    grid-template-columns: 1fr;
   }
 
   .image-comparison {
     flex-direction: column;
   }
 
-  .social-presets {
-    grid-template-columns: 1fr;
+  .progress-loader-container {
+    padding: 20px;
+  }
+
+  .progress-loader-text {
+    font-size: 1rem;
   }
 }
